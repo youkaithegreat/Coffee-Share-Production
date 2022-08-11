@@ -3,6 +3,8 @@ const { validationResult } = require( 'express-validator' )
 const HttpError = require( '../models/http-error' );
 const getCoordsForAddress = require( '../util/location' )
 
+const Place = require( '../models/place' )
+
 let DUMMY_PLACES = [
     {
         id: 'p1',
@@ -17,29 +19,44 @@ let DUMMY_PLACES = [
     }
 ];
 
-const getPlaceById = ( req, res, next ) => {
+const getPlaceById = async ( req, res, next ) => {
     const placeId = req.params.pid; // { pid: 'p1' }
 
-    const place = DUMMY_PLACES.find( p => {
-        return p.id === placeId;
-    } );
 
-    if ( !place ) {
-        throw new HttpError( 'Could not find a place for the provided id.', 404 );
+    let place;
+    try {
+
+        place = await Place.findById( placeId )
+    } catch ( err ) {
+        const error = new HttpError( "Something went wrong with getPlaceById", 500 )
+
+        return next( error )
     }
 
-    res.json( { place } ); // => { place } => { place: place }
+    if ( !place ) {
+        const error = new HttpError( 'Could not find a place for the provided id.', 404 );
+        return next( error )
+    }
+
+    res.json( { place: place.toObject( { getters: true } ) } ); // => { place } => { place: place }
 };
 
 // function getPlaceById() { ... }
 // const getPlaceById = function() { ... }
 
-const getPlacesByUserId = ( req, res, next ) => {
+const getPlacesByUserId = async ( req, res, next ) => {
     const userId = req.params.uid;
 
-    const places = DUMMY_PLACES.filter( p => {
-        return p.creator === userId;
-    } );
+    let places;
+
+    try {
+        places = await Place.find( { creator: userId } )
+    } catch ( err ) {
+        const error = new HttpError( "Something went wrong in getPlacesByUserId", 500 )
+
+        return next( error )
+    }
+
 
     if ( !places || places.length === 0 ) {
         return next(
@@ -47,14 +64,14 @@ const getPlacesByUserId = ( req, res, next ) => {
         );
     }
 
-    res.json( { places } );
+    res.json( { places: places.toObject( { getters: true } ) } );
 };
 
 const createPlace = async ( req, res, next ) => {
     const errors = validationResult( req );
     if ( !errors.isEmpty() ) {
         console.log( errors );
-        next( new HttpError( "INvalid inputs, ", 422 ) )
+        return next( new HttpError( "INvalid inputs, ", 422 ) )
     }
 
     const { title, description, address, creator } = req.body;
@@ -64,22 +81,30 @@ const createPlace = async ( req, res, next ) => {
 
     try {
 
-        ccoordinates = await getCoordsForAddress( address )
+        coordinates = await getCoordsForAddress( address )
     } catch ( error ) {
         return next( error )
     }
-
     // const title = req.body.title;
-    const createdPlace = {
-        id: uuidv4(),
+    const createdPlace = new Place( {
         title,
         description,
-        location: coordinates,
         address,
+        location: coordinates,
+        image: 'https://scontent-hou1-1.xx.fbcdn.net/v/t1.6435-9/48420122_10217592345750783_2060351848329510912_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=19026a&_nc_ohc=KOGZ1AFdOJwAX9lfM6L&_nc_ht=scontent-hou1-1.xx&oh=00_AT9AGE0LiKVvaEr3dbuGWDgD8UFBUAnsya_C8l38aWkJeA&oe=631AB3A1',
         creator
-    };
+    } );
 
-    DUMMY_PLACES.push( createdPlace ); //unshift(createdPlace)
+    try {
+
+        await createdPlace.save();
+
+    } catch ( err ) {
+        const error = new HttpError(
+            'Creating place failed, please try again.', 500
+        )
+        return next( error )
+    }
 
     res.status( 201 ).json( { place: createdPlace } );
 };
