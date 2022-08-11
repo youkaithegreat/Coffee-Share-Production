@@ -2,8 +2,10 @@ const { v4: uuidv4 } = require( 'uuid' );
 const { validationResult } = require( 'express-validator' )
 const HttpError = require( '../models/http-error' );
 const getCoordsForAddress = require( '../util/location' )
+const User = require( '../models/user' )
 
-const Place = require( '../models/place' )
+const Place = require( '../models/place' );
+const { default: mongoose } = require( 'mongoose' );
 
 let DUMMY_PLACES = [
     {
@@ -95,9 +97,31 @@ const createPlace = async ( req, res, next ) => {
         creator
     } );
 
-    try {
+    let user;
 
-        await createdPlace.save();
+    try {
+        user = await User.findById( creator )
+    } catch ( err ) {
+        const error = new HttpError( "Creating place failed", 500 )
+        return next( error )
+    }
+
+    if ( !user ) {
+        const error = new HttpError( "Could not find user for provided ID", 404 )
+        return next( error )
+    }
+
+    console.log( user );
+
+
+
+    try {
+        const sess = await mongoose.startSession()
+        sess.startTransaction();
+        await createdPlace.save( { session: sess } )
+        user.places.push( createdPlace )
+        await user.save( { session: sess } )
+        await sess.commitTransaction();
 
     } catch ( err ) {
         const error = new HttpError(
@@ -149,14 +173,23 @@ const deletePlace = async ( req, res, next ) => {
     let place;
 
     try {
-        place = await Place.findById( placeId )
+        place = await Place.findById( placeId ).populate( 'creator' );
     } catch ( err ) {
         const error = new HttpError( "deletePlace broke", 500 )
         return next( error )
     }
 
+
+    if ( !place ) {
+        const error = new HttpError( 'Could not find place for this id', 404 )
+        return next( error )
+    }
     try {
-        place.remove();
+        const sess = await mongoose.startSession()
+        sess.startTransaction();
+        await place.remove( { session: sess } );
+        place.creator.places.pull( place );
+        await place.creator.save( { session: sess } )
     } catch ( err ) {
         const error = new HttpError( "Removal part two broke", 500 )
         return next( error )

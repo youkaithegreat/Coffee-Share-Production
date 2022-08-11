@@ -18,14 +18,11 @@ const getUsers = async ( req, res, next ) => {
     let users;
 
     try {
-
-
         users = await User.find( {}, '-password' );
     } catch ( err ) {
         const error = new HttpError( "Fail getting users", 500 )
     }
-
-
+    res.json( { users: users.map( user => user.toObject( { getters: true } ) ) } )
 }
 
 const signup = async ( req, res, next ) => {
@@ -35,7 +32,7 @@ const signup = async ( req, res, next ) => {
         return next( new HttpError( "INvalid inputs, ", 422 ) )
     }
 
-    const { name, email, password, places } = req.body;
+    const { name, email, password } = req.body;
 
     let existingUser;
 
@@ -56,7 +53,7 @@ const signup = async ( req, res, next ) => {
         email,
         image: "rarwar",
         password,
-        places
+        places: []
     } )
 
 
