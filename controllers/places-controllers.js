@@ -7,23 +7,8 @@ const User = require( '../models/user' )
 const Place = require( '../models/place' );
 const { default: mongoose } = require( 'mongoose' );
 
-let DUMMY_PLACES = [
-    {
-        id: 'p1',
-        title: 'Empire State Building',
-        description: 'One of the most famous sky scrapers in the world!',
-        location: {
-            lat: 40.7484474,
-            lng: -73.9871516
-        },
-        address: '20 W 34th St, New York, NY 10001',
-        creator: 'u1'
-    }
-];
-
 const getPlaceById = async ( req, res, next ) => {
-    const placeId = req.params.pid; // { pid: 'p1' }
-
+    const placeId = req.params.pid;
 
     let place;
     try {
@@ -40,11 +25,33 @@ const getPlaceById = async ( req, res, next ) => {
         return next( error )
     }
 
-    res.json( { place: place.toObject( { getters: true } ) } ); // => { place } => { place: place }
+    res.json( { place: place.toObject( { getters: true } ) } );
 };
 
-// function getPlaceById() { ... }
-// const getPlaceById = function() { ... }
+
+//code diverges based off his feelings
+// const getPlacesByUserId = async ( req, res, next ) => {
+//     const userId = req.params.uid;
+
+//     let userWithPlaces;
+
+//     try {
+//         userWithPlaces = await Place.findById(userId).populate('places');
+//     } catch ( err ) {
+//         const error = new HttpError( "Something went wrong in getPlacesByUserId", 500 )
+
+//         return next( error )
+//     }
+
+
+//     if ( !userWithPlaces || userWithPlaces.length === 0 ) {
+//         return next(
+//             new HttpError( 'Could not find a place for the provided user id.', 404 )
+//         );
+//     }
+
+//     res.json( { places: userWithPlaces.map( place => place.toObject( { getters: true } ) ) } );
+// };
 
 const getPlacesByUserId = async ( req, res, next ) => {
     const userId = req.params.uid;
@@ -58,7 +65,6 @@ const getPlacesByUserId = async ( req, res, next ) => {
 
         return next( error )
     }
-
 
     if ( !places || places.length === 0 ) {
         return next(
@@ -77,7 +83,6 @@ const createPlace = async ( req, res, next ) => {
     }
 
     const { title, description, address, creator } = req.body;
-
 
     let coordinates;
 
@@ -113,8 +118,6 @@ const createPlace = async ( req, res, next ) => {
 
     console.log( user );
 
-
-
     try {
         const sess = await mongoose.startSession()
         sess.startTransaction();
@@ -145,6 +148,7 @@ const updatePlace = async ( req, res, next ) => {
     const placeId = req.params.pid;
 
     let place;
+
     try {
         place = await Place.findById( placeId );
     } catch ( err ) {
@@ -162,7 +166,6 @@ const updatePlace = async ( req, res, next ) => {
         return next( error )
     }
 
-
     res.status( 200 ).json( { place: place.toObject( { getters: true } ) } );
 }
 
@@ -179,11 +182,11 @@ const deletePlace = async ( req, res, next ) => {
         return next( error )
     }
 
-
     if ( !place ) {
         const error = new HttpError( 'Could not find place for this id', 404 )
         return next( error )
     }
+
     try {
         const sess = await mongoose.startSession()
         sess.startTransaction();
@@ -194,9 +197,6 @@ const deletePlace = async ( req, res, next ) => {
         const error = new HttpError( "Removal part two broke", 500 )
         return next( error )
     }
-
-
-
 
     res.status( 200 ).json( { message: "Deleted place." } )
 }
