@@ -193,6 +193,7 @@ const deletePlace = async ( req, res, next ) => {
         await place.remove( { session: sess } );
         place.creator.places.pull( place );
         await place.creator.save( { session: sess } )
+        await sess.commitTransaction();
     } catch ( err ) {
         const error = new HttpError( "Removal part two broke", 500 )
         return next( error )
