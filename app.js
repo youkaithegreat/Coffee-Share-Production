@@ -38,7 +38,6 @@ app.use( ( error, req, res, next ) => {
 
 mongoose.connect( "mongodb+srv://user123:udemy123@youkaicreations.nnxkdyz.mongodb.net/places?retryWrites=true&w=majority" )
     .then( () => {
-
         app.listen( 3001, () => {
             console.log( "listening" )
         } );
