@@ -4,15 +4,6 @@ const HttpError = require( '../models/http-error' )
 const { validationResult } = require( 'express-validator' )
 const User = require( '../models/user' )
 
-const DUMMY_USERS = [
-    {
-        id: 'u1',
-        name: "Max Schwarz",
-        email: 'test@test.com',
-        password: 'testers'
-    }
-]
-
 const getUsers = async ( req, res, next ) => {
 
     let users;
@@ -83,7 +74,6 @@ const login = async ( req, res, next ) => {
         const error = new HttpError( "Invalid credentials, could not log you in", 401 )
         return next( error )
     }
-
 
     res.json( { message: "Logged in!" } )
 }
