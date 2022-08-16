@@ -42,7 +42,7 @@ const signup = async ( req, res, next ) => {
     const createdUser = new User( {
         name,
         email,
-        image: "rarwar",
+        image: req.file.path,
         password,
         places: []
     } )

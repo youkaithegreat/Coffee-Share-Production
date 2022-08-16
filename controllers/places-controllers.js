@@ -1,3 +1,4 @@
+const fs = require( "fs" )
 const { v4: uuidv4 } = require( 'uuid' );
 const { validationResult } = require( 'express-validator' )
 const HttpError = require( '../models/http-error' );
@@ -98,7 +99,7 @@ const createPlace = async ( req, res, next ) => {
         description,
         address,
         location: coordinates,
-        image: 'https://scontent-hou1-1.xx.fbcdn.net/v/t1.6435-9/48420122_10217592345750783_2060351848329510912_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=19026a&_nc_ohc=KOGZ1AFdOJwAX9lfM6L&_nc_ht=scontent-hou1-1.xx&oh=00_AT9AGE0LiKVvaEr3dbuGWDgD8UFBUAnsya_C8l38aWkJeA&oe=631AB3A1',
+        image: req.file.path,
         creator
     } );
 
@@ -187,6 +188,8 @@ const deletePlace = async ( req, res, next ) => {
         return next( error )
     }
 
+    const imagePath = place.image;
+
     try {
         const sess = await mongoose.startSession()
         sess.startTransaction();
@@ -198,6 +201,10 @@ const deletePlace = async ( req, res, next ) => {
         const error = new HttpError( "Removal part two broke", 500 )
         return next( error )
     }
+
+    fs.unlink( imagePath, err => {
+        console.log( err )
+    } )
 
     res.status( 200 ).json( { message: "Deleted place." } )
 }
