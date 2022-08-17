@@ -1,4 +1,5 @@
 const { get } = require( "../routes/places-routes" )
+const bcrypt = require( 'bcryptjs' )
 const { v4: uuidv4 } = require( 'uuid' );
 const HttpError = require( '../models/http-error' )
 const { validationResult } = require( 'express-validator' )
@@ -39,11 +40,21 @@ const signup = async ( req, res, next ) => {
         return next( error )
     }
 
+    let hashedPassword;
+
+    try {
+        hashedPasword = await bcrypt.hash( password, 12 )
+    }
+    catch ( err ) {
+        const error = new HttpError( "Could not create user, please try again, hash failed", 500 )
+        return next( error )
+    }
+
     const createdUser = new User( {
         name,
         email,
         image: req.file.path,
-        password,
+        password: hashedPassword,
         places: []
     } )
 
