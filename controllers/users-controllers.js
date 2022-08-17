@@ -1,9 +1,7 @@
-const { get } = require( "../routes/places-routes" )
+const { validationResult } = require( 'express-validator' )
 const bcrypt = require( 'bcryptjs' )
 const jwt = require( 'jsonwebtoken' )
-const { v4: uuidv4 } = require( 'uuid' );
 const HttpError = require( '../models/http-error' )
-const { validationResult } = require( 'express-validator' )
 const User = require( '../models/user' )
 
 const getUsers = async ( req, res, next ) => {
@@ -44,7 +42,7 @@ const signup = async ( req, res, next ) => {
     let hashedPassword;
 
     try {
-        hashedPasword = await bcrypt.hash( password, 12 )
+        hashedPassword = await bcrypt.hash( password, 12 )
     }
     catch ( err ) {
         const error = new HttpError( "Could not create user, please try again, hash failed", 500 )
@@ -122,7 +120,7 @@ const login = async ( req, res, next ) => {
             { expiresIn: '1h' }
         )
     } catch ( err ) {
-        const error = new HttpError( "create user save broke", 500 )
+        const error = new HttpError( "Logging in failed broke", 500 )
         return next( error )
     }
 
