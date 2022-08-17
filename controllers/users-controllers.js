@@ -124,7 +124,7 @@ const login = async ( req, res, next ) => {
         return next( error )
     }
 
-    res.status( 201 ).json( { message: "loggedin", userId: createdUser.id, email: createdUser.email, token: token } )
+    res.status( 201 ).json( { message: "loggedin", userId: existingUser.id, email: existingUser.email, token: token } )
 }
 
 exports.getUsers = getUsers;

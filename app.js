@@ -4,7 +4,7 @@ const path = require( 'path' )
 const express = require( "express" )
 const bodyParse = require( "body-parser" )
 const mongoose = require( 'mongoose' )
-
+const cors = require( 'cors' )
 const placesRoutes = require( './routes/places-routes' );
 const userRoutes = require( './routes/user-routes' )
 const HttpError = require( './models/http-error' )
@@ -25,6 +25,7 @@ app.use( ( req, res, next ) => {
 
     next();
 } )
+
 
 app.use( "/api/places", placesRoutes )
 app.use( '/api/users', userRoutes )
