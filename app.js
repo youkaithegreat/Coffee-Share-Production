@@ -60,8 +60,8 @@ const db_name = process.env.DB_NAME
 
 mongoose.connect( `mongodb+srv://${db_username}:${db_password}@youkaicreations.nnxkdyz.mongodb.net/${db_name}?retryWrites=true&w=majority` )
     .then( () => {
-        app.listen( process.env.PORT || 3001, () => {
-            console.log( "listening" + process.env.PORT )
+        app.listen( 3001, () => {
+            console.log( "listening" + 3001 )
             console.log( process.env.DB_USER )
         } );
     } ).catch( err => {
